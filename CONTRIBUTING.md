@@ -212,5 +212,6 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-**Thank you for contributing to PixelForge!** 🎨✨
+**Thank you for contributing to Pix3lForge!** 🎨✨
+
 
