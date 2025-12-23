@@ -1,6 +1,6 @@
-# Contributing to PixelForge
+# Contributing to Pix3lForge
 
-Thank you for your interest in contributing to PixelForge! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Pix3lForge! This document provides guidelines for contributing to the project.
 
 ## 🎯 How Can I Contribute?
 
@@ -213,3 +213,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 ---
 
 **Thank you for contributing to PixelForge!** 🎨✨
+
