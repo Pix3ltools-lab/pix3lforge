@@ -1,0 +1,701 @@
+#include "mainwindow.h"
+#include "imageprocessor.h"
+#include <QtWidgets>
+
+MainWindow::MainWindow()
+    : imageLabel(new QLabel)
+    , scrollArea(new QScrollArea)
+    , scaleFactor(1)
+    , undoStack(new QUndoStack(this))
+    , imageProcessor(new ImageProcessor(this))
+{
+    imageLabel->setBackgroundRole(QPalette::Base);
+    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    imageLabel->setScaledContents(true);
+
+    scrollArea->setBackgroundRole(QPalette::Dark);
+    scrollArea->setWidget(imageLabel);
+    scrollArea->setVisible(false);
+    setCentralWidget(scrollArea);
+
+    createActions();
+    createMenus();
+    createToolBars();
+    createStatusBar();
+
+    resize(800, 600);
+}
+
+bool MainWindow::loadFile(const QString &fileName)
+{
+    QImageReader reader(fileName);
+    reader.setAutoTransform(true);
+    const QImage newImage = reader.read();
+    if (newImage.isNull()) {
+        QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
+                                 tr("Cannot load %1: %2")
+                                 .arg(QDir::toNativeSeparators(fileName), reader.errorString()));
+        return false;
+    }
+
+    image = newImage;
+    imageLabel->setPixmap(QPixmap::fromImage(image));
+    scaleFactor = 1.0;
+
+    scrollArea->setVisible(true);
+    updateActions();
+
+    QString message = tr("Opened \"%1\", %2x%3, Depth: %4")
+        .arg(QDir::toNativeSeparators(fileName))
+        .arg(image.width())
+        .arg(image.height())
+        .arg(image.depth());
+    statusBar()->showMessage(message);
+    return true;
+}
+
+void MainWindow::open()
+{
+    QFileDialog dialog(this, tr("Open File"));
+    dialog.setMimeTypeFilters(QStringList()
+        << "image/jpeg" << "image/png" << "image/bmp"
+        << "image/gif" << "image/x-portable-bitmap"
+        << "image/x-portable-graymap" << "image/x-portable-pixmap"
+        << "image/x-xbitmap" << "image/x-xpixmap");
+
+    if (dialog.exec() == QDialog::Accepted)
+        loadFile(dialog.selectedFiles().first());
+}
+
+void MainWindow::save()
+{
+    // TODO: Implement save functionality
+    statusBar()->showMessage(tr("Save functionality not implemented yet"), 2000);
+}
+
+void MainWindow::about()
+{
+    QMessageBox::about(this, tr("About PixelForge"),
+        tr("<p><b>PixelForge</b> is an image editor application.</p>"));
+}
+
+// Basic adjustments
+void MainWindow::adjustBrightness()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Brightness"), tr("Adjust brightness (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustBrightness(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Brightness adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustContrast()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Contrast"), tr("Adjust contrast (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustContrast(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Contrast adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustSaturation()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Saturation"), tr("Adjust saturation (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustSaturation(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Saturation adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustHue()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Hue"), tr("Adjust hue (-180 to 180):"),
+                                     0, -180, 180, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustHue(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Hue adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustGamma()
+{
+    bool ok;
+    double value = QInputDialog::getDouble(this, tr("Gamma"), tr("Adjust gamma (0.1 to 10.0):"),
+                                           1.0, 0.1, 10.0, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustGamma(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Gamma adjusted to %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+// Color adjustments
+void MainWindow::adjustColorTemperature()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Color Temperature"), tr("Adjust color temperature (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustColorTemperature(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Color temperature adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustExposure()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Exposure"), tr("Adjust exposure (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustExposure(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Exposure adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustShadows()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Shadows"), tr("Adjust shadows (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustShadows(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Shadows adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::adjustHighlights()
+{
+    bool ok;
+    int value = QInputDialog::getInt(this, tr("Highlights"), tr("Adjust highlights (-100 to 100):"),
+                                     0, -100, 100, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->adjustHighlights(image, value);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Highlights adjusted by %1").arg(value);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+// Filters
+void MainWindow::applyBlackAndWhite()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->applyBlackAndWhite(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Applied Black & White filter"), 2000);
+    }
+}
+
+void MainWindow::applySepia()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->applySepia(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Applied Sepia filter"), 2000);
+    }
+}
+
+void MainWindow::applyVignette()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->applyVignette(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Applied Vignette effect"), 2000);
+    }
+}
+
+void MainWindow::applySharpen()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->applySharpen(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Applied Sharpen filter"), 2000);
+    }
+}
+
+void MainWindow::applyBlur()
+{
+    bool ok;
+    int radius = QInputDialog::getInt(this, tr("Blur"), tr("Set blur radius (1 to 10):"),
+                                      2, 1, 10, 1, &ok);
+    if (ok && !image.isNull()) {
+        image = imageProcessor->applyBlur(image, radius);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        QString message = tr("Applied Blur filter with radius %1").arg(radius);
+        statusBar()->showMessage(message, 2000);
+    }
+}
+
+void MainWindow::applyEdgeDetection()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->applyEdgeDetection(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Applied Edge Detection filter"), 2000);
+    }
+}
+
+// Transformations
+void MainWindow::rotate90()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->rotate(image, 90);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Rotated 90° clockwise"), 2000);
+    }
+}
+
+void MainWindow::rotate180()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->rotate(image, 180);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Rotated 180°"), 2000);
+    }
+}
+
+void MainWindow::rotate270()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->rotate(image, 270);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Rotated 270° clockwise"), 2000);
+    }
+}
+
+void MainWindow::flipHorizontal()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->flipHorizontal(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Flipped horizontally"), 2000);
+    }
+}
+
+void MainWindow::flipVertical()
+{
+    if (!image.isNull()) {
+        image = imageProcessor->flipVertical(image);
+        imageLabel->setPixmap(QPixmap::fromImage(image));
+        updateActions();
+        statusBar()->showMessage(tr("Flipped vertically"), 2000);
+    }
+}
+
+void MainWindow::resizeImage()
+{
+    if (!image.isNull()) {
+        bool ok;
+        int width = QInputDialog::getInt(this, tr("Resize"), tr("Enter new width:"),
+                                         image.width(), 1, 10000, 1, &ok);
+        if (ok) {
+            int height = QInputDialog::getInt(this, tr("Resize"), tr("Enter new height:"),
+                                              image.height(), 1, 10000, 1, &ok);
+            if (ok) {
+                image = imageProcessor->resize(image, width, height);
+                imageLabel->setPixmap(QPixmap::fromImage(image));
+                updateActions();
+                QString message = tr("Resized to %1x%2").arg(width).arg(height);
+                statusBar()->showMessage(message, 2000);
+            }
+        }
+    }
+}
+
+void MainWindow::cropImage()
+{
+    if (!image.isNull()) {
+        bool ok;
+        int x = QInputDialog::getInt(this, tr("Crop"), tr("Enter X coordinate:"),
+                                     0, 0, image.width()-1, 1, &ok);
+        if (ok) {
+            int y = QInputDialog::getInt(this, tr("Crop"), tr("Enter Y coordinate:"),
+                                         0, 0, image.height()-1, 1, &ok);
+            if (ok) {
+                int width = QInputDialog::getInt(this, tr("Crop"), tr("Enter width:"),
+                                                 image.width()/2, 1, image.width()-x, 1, &ok);
+                if (ok) {
+                    int height = QInputDialog::getInt(this, tr("Crop"), tr("Enter height:"),
+                                                     image.height()/2, 1, image.height()-y, 1, &ok);
+                    if (ok) {
+                        image = imageProcessor->crop(image, x, y, width, height);
+                        imageLabel->setPixmap(QPixmap::fromImage(image));
+                        updateActions();
+                        QString message = tr("Cropped to %1x%2 at (%3,%4)").arg(width).arg(height).arg(x).arg(y);
+                        statusBar()->showMessage(message, 2000);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Watermarking
+void MainWindow::addTextWatermark()
+{
+    if (!image.isNull()) {
+        bool ok;
+        QString text = QInputDialog::getText(this, tr("Text Watermark"), tr("Enter watermark text:"),
+                                             QLineEdit::Normal, tr("Sample Watermark"), &ok);
+        if (ok && !text.isEmpty()) {
+            bool okPos;
+            int x = QInputDialog::getInt(this, tr("Text Watermark"), tr("Enter X position:"),
+                                         10, 0, image.width()-100, 1, &okPos);
+            if (okPos) {
+                int y = QInputDialog::getInt(this, tr("Text Watermark"), tr("Enter Y position:"),
+                                             image.height()-10, 0, image.height()-10, 1, &okPos);
+                if (okPos) {
+                    image = imageProcessor->addTextWatermark(image, text, x, y);
+                    imageLabel->setPixmap(QPixmap::fromImage(image));
+                    updateActions();
+                    statusBar()->showMessage(tr("Added text watermark"), 2000);
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::addImageWatermark()
+{
+    if (!image.isNull()) {
+        QString fileName = QFileDialog::getOpenFileName(this, tr("Select Watermark Image"),
+                                                        QDir::homePath(), tr("Images (*.png *.xpm *.jpg *.bmp)"));
+        if (!fileName.isEmpty()) {
+            QImage watermark(fileName);
+            if (!watermark.isNull()) {
+                bool ok;
+                int x = QInputDialog::getInt(this, tr("Image Watermark"), tr("Enter X position:"),
+                                             10, 0, image.width()-watermark.width(), 1, &ok);
+                if (ok) {
+                    int y = QInputDialog::getInt(this, tr("Image Watermark"), tr("Enter Y position:"),
+                                                 image.height()-watermark.height(), 0, image.height()-watermark.height(), 1, &ok);
+                    if (ok) {
+                        image = imageProcessor->addImageWatermark(image, watermark, x, y);
+                        imageLabel->setPixmap(QPixmap::fromImage(image));
+                        updateActions();
+                        statusBar()->showMessage(tr("Added image watermark"), 2000);
+                    }
+                }
+            } else {
+                statusBar()->showMessage(tr("Cannot load watermark image"), 2000);
+            }
+        }
+    }
+}
+
+void MainWindow::zoomIn()
+{
+    scaleImage(1.25);
+}
+
+void MainWindow::zoomOut()
+{
+    scaleImage(0.8);
+}
+
+void MainWindow::normalSize()
+{
+    imageLabel->adjustSize();
+    scaleFactor = 1.0;
+}
+
+void MainWindow::fitToWindow()
+{
+    bool fitToWindow = fitToWindowAct->isChecked();
+    scrollArea->setWidgetResizable(fitToWindow);
+    if (!fitToWindow)
+        normalSize();
+    updateActions();
+}
+
+void MainWindow::createActions()
+{
+    // File actions
+    QAction *openAct = new QAction(tr("&Open..."), this);
+    openAct->setShortcut(QKeySequence::Open);
+    connect(openAct, &QAction::triggered, this, &MainWindow::open);
+
+    saveAct = new QAction(tr("&Save"), this);
+    saveAct->setShortcut(QKeySequence::Save);
+    saveAct->setEnabled(false);
+    connect(saveAct, &QAction::triggered, this, &MainWindow::save);
+
+    QAction *exitAct = new QAction(tr("E&Exit"), this);
+    exitAct->setShortcut(tr("Ctrl+Q"));
+    connect(exitAct, &QAction::triggered, this, &MainWindow::close);
+
+    // View actions
+    zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
+    zoomInAct->setShortcut(QKeySequence::ZoomIn);
+    zoomInAct->setEnabled(false);
+    connect(zoomInAct, &QAction::triggered, this, &MainWindow::zoomIn);
+
+    zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
+    zoomOutAct->setShortcut(QKeySequence::ZoomOut);
+    zoomOutAct->setEnabled(false);
+    connect(zoomOutAct, &QAction::triggered, this, &MainWindow::zoomOut);
+
+    normalSizeAct = new QAction(tr("&Normal Size"), this);
+    normalSizeAct->setShortcut(tr("Ctrl+S"));
+    normalSizeAct->setEnabled(false);
+    connect(normalSizeAct, &QAction::triggered, this, &MainWindow::normalSize);
+
+    fitToWindowAct = new QAction(tr("&Fit to Window"), this);
+    fitToWindowAct->setEnabled(false);
+    fitToWindowAct->setCheckable(true);
+    connect(fitToWindowAct, &QAction::triggered, this, &MainWindow::fitToWindow);
+
+    // Basic adjustments actions
+    QAction *brightnessAct = new QAction(tr("&Brightness"), this);
+    connect(brightnessAct, &QAction::triggered, this, &MainWindow::adjustBrightness);
+
+    QAction *contrastAct = new QAction(tr("&Contrast"), this);
+    connect(contrastAct, &QAction::triggered, this, &MainWindow::adjustContrast);
+
+    QAction *saturationAct = new QAction(tr("&Saturation"), this);
+    connect(saturationAct, &QAction::triggered, this, &MainWindow::adjustSaturation);
+
+    QAction *hueAct = new QAction(tr("&Hue"), this);
+    connect(hueAct, &QAction::triggered, this, &MainWindow::adjustHue);
+
+    QAction *gammaAct = new QAction(tr("&Gamma"), this);
+    connect(gammaAct, &QAction::triggered, this, &MainWindow::adjustGamma);
+
+    // Color adjustments actions
+    QAction *temperatureAct = new QAction(tr("&Color Temperature"), this);
+    connect(temperatureAct, &QAction::triggered, this, &MainWindow::adjustColorTemperature);
+
+    QAction *exposureAct = new QAction(tr("&Exposure"), this);
+    connect(exposureAct, &QAction::triggered, this, &MainWindow::adjustExposure);
+
+    QAction *shadowsAct = new QAction(tr("&Shadows"), this);
+    connect(shadowsAct, &QAction::triggered, this, &MainWindow::adjustShadows);
+
+    QAction *highlightsAct = new QAction(tr("&Highlights"), this);
+    connect(highlightsAct, &QAction::triggered, this, &MainWindow::adjustHighlights);
+
+    // Filters actions
+    QAction *blackWhiteAct = new QAction(tr("&Black & White"), this);
+    connect(blackWhiteAct, &QAction::triggered, this, &MainWindow::applyBlackAndWhite);
+
+    QAction *sepiaAct = new QAction(tr("&Sepia"), this);
+    connect(sepiaAct, &QAction::triggered, this, &MainWindow::applySepia);
+
+    QAction *vignetteAct = new QAction(tr("&Vignette"), this);
+    connect(vignetteAct, &QAction::triggered, this, &MainWindow::applyVignette);
+
+    QAction *sharpenAct = new QAction(tr("&Sharpen"), this);
+    connect(sharpenAct, &QAction::triggered, this, &MainWindow::applySharpen);
+
+    QAction *blurAct = new QAction(tr("&Blur"), this);
+    connect(blurAct, &QAction::triggered, this, &MainWindow::applyBlur);
+
+    QAction *edgeDetectionAct = new QAction(tr("&Edge Detection"), this);
+    connect(edgeDetectionAct, &QAction::triggered, this, &MainWindow::applyEdgeDetection);
+
+    // Transformations actions
+    QAction *rotate90Act = new QAction(tr("Rotate 90°"), this);
+    connect(rotate90Act, &QAction::triggered, this, &MainWindow::rotate90);
+
+    QAction *rotate180Act = new QAction(tr("Rotate 180°"), this);
+    connect(rotate180Act, &QAction::triggered, this, &MainWindow::rotate180);
+
+    QAction *rotate270Act = new QAction(tr("Rotate 270°"), this);
+    connect(rotate270Act, &QAction::triggered, this, &MainWindow::rotate270);
+
+    QAction *flipHorizontalAct = new QAction(tr("Flip &Horizontal"), this);
+    connect(flipHorizontalAct, &QAction::triggered, this, &MainWindow::flipHorizontal);
+
+    QAction *flipVerticalAct = new QAction(tr("Flip &Vertical"), this);
+    connect(flipVerticalAct, &QAction::triggered, this, &MainWindow::flipVertical);
+
+    QAction *resizeAct = new QAction(tr("&Resize"), this);
+    connect(resizeAct, &QAction::triggered, this, &MainWindow::resizeImage);
+
+    QAction *cropAct = new QAction(tr("&Crop"), this);
+    connect(cropAct, &QAction::triggered, this, &MainWindow::cropImage);
+
+    // Watermarking actions
+    QAction *textWatermarkAct = new QAction(tr("Text &Watermark"), this);
+    connect(textWatermarkAct, &QAction::triggered, this, &MainWindow::addTextWatermark);
+
+    QAction *imageWatermarkAct = new QAction(tr("&Image Watermark"), this);
+    connect(imageWatermarkAct, &QAction::triggered, this, &MainWindow::addImageWatermark);
+
+    QAction *aboutAct = new QAction(tr("&About"), this);
+    connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
+
+    // Store actions for menu creation
+    fileActions << openAct << saveAct << exitAct;
+    editActions << brightnessAct << contrastAct << saturationAct << hueAct << gammaAct
+                << temperatureAct << exposureAct << shadowsAct << highlightsAct;
+    filterActions << blackWhiteAct << sepiaAct << vignetteAct << sharpenAct << blurAct << edgeDetectionAct;
+    transformActions << rotate90Act << rotate180Act << rotate270Act << flipHorizontalAct << flipVerticalAct
+                     << resizeAct << cropAct;
+    watermarkActions << textWatermarkAct << imageWatermarkAct;
+    viewActions << zoomInAct << zoomOutAct << normalSizeAct << fitToWindowAct;
+    helpActions << aboutAct;
+}
+
+void MainWindow::createMenus()
+{
+    // File menu
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    for (QAction *action : fileActions) {
+        fileMenu->addAction(action);
+    }
+
+    // Edit menu
+    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addSection(tr("Basic Adjustments"));
+    for (int i = 0; i < 5; ++i) {
+        editMenu->addAction(editActions[i]);
+    }
+    editMenu->addSection(tr("Color Adjustments"));
+    for (int i = 5; i < editActions.size(); ++i) {
+        editMenu->addAction(editActions[i]);
+    }
+
+    // Filter menu
+    QMenu *filterMenu = menuBar()->addMenu(tr("&Filter"));
+    for (QAction *action : filterActions) {
+        filterMenu->addAction(action);
+    }
+
+    // Transform menu
+    QMenu *transformMenu = menuBar()->addMenu(tr("&Transform"));
+    transformMenu->addSection(tr("Rotate"));
+    for (int i = 0; i < 3; ++i) {
+        transformMenu->addAction(transformActions[i]);
+    }
+    transformMenu->addSection(tr("Flip"));
+    for (int i = 3; i < 5; ++i) {
+        transformMenu->addAction(transformActions[i]);
+    }
+    transformMenu->addSection(tr("Resize & Crop"));
+    for (int i = 5; i < transformActions.size(); ++i) {
+        transformMenu->addAction(transformActions[i]);
+    }
+
+    // Watermark menu
+    QMenu *watermarkMenu = menuBar()->addMenu(tr("&Watermark"));
+    for (QAction *action : watermarkActions) {
+        watermarkMenu->addAction(action);
+    }
+
+    // View menu
+    QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+    for (QAction *action : viewActions) {
+        viewMenu->addAction(action);
+    }
+
+    // Help menu
+    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
+    for (QAction *action : helpActions) {
+        helpMenu->addAction(action);
+    }
+}
+
+void MainWindow::createToolBars()
+{
+    QToolBar *fileToolBar = addToolBar(tr("File"));
+    fileToolBar->addAction(fileActions[0]); // Open
+    fileToolBar->addAction(saveAct);
+
+    QToolBar *editToolBar = addToolBar(tr("Edit"));
+    editToolBar->addAction(editActions[0]); // Brightness
+    editToolBar->addAction(editActions[1]); // Contrast
+    editToolBar->addAction(filterActions[0]); // Black & White
+    editToolBar->addAction(filterActions[3]); // Sharpen
+
+    QToolBar *transformToolBar = addToolBar(tr("Transform"));
+    transformToolBar->addAction(transformActions[0]); // Rotate 90
+    transformToolBar->addAction(transformActions[3]); // Flip Horizontal
+    transformToolBar->addAction(transformActions[5]); // Resize
+
+    QToolBar *viewToolBar = addToolBar(tr("View"));
+    viewToolBar->addAction(zoomInAct);
+    viewToolBar->addAction(zoomOutAct);
+    viewToolBar->addAction(normalSizeAct);
+    viewToolBar->addAction(fitToWindowAct);
+}
+
+void MainWindow::createStatusBar()
+{
+    statusBar()->showMessage(tr("Ready"));
+}
+
+void MainWindow::updateActions()
+{
+    saveAct->setEnabled(!image.isNull());
+    zoomInAct->setEnabled(!image.isNull());
+    zoomOutAct->setEnabled(!image.isNull());
+    normalSizeAct->setEnabled(!image.isNull());
+    fitToWindowAct->setEnabled(!image.isNull());
+}
+
+void MainWindow::scaleImage(double factor)
+{
+    if (!image.isNull()) {
+        scaleFactor *= factor;
+        imageLabel->resize(scaleFactor * imageLabel->pixmap().size());
+
+        adjustScrollBar(scrollArea->horizontalScrollBar(), factor);
+        adjustScrollBar(scrollArea->verticalScrollBar(), factor);
+
+        zoomInAct->setEnabled(scaleFactor < 3.0);
+        zoomOutAct->setEnabled(scaleFactor > 0.333);
+    }
+}
+
+void MainWindow::adjustScrollBar(QScrollBar *scrollBar, double factor)
+{
+    scrollBar->setValue(int(factor * scrollBar->value()
+                            + ((factor - 1) * scrollBar->pageStep()/2)));
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    event->accept();
+}

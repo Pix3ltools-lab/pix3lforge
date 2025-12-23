@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- AI Brain/Neural Network Icon -->
+  <g fill="none" stroke="#e0e0e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Central node (AI core) -->
+    <circle cx="24" cy="24" r="4" fill="#4a9eff" stroke="#4a9eff"/>
+
+    <!-- Outer nodes (neural network) -->
+    <circle cx="12" cy="12" r="2.5" fill="#7cb8ff"/>
+    <circle cx="36" cy="12" r="2.5" fill="#7cb8ff"/>
+    <circle cx="12" cy="36" r="2.5" fill="#7cb8ff"/>
+    <circle cx="36" cy="36" r="2.5" fill="#7cb8ff"/>
+
+    <!-- Mid-layer nodes -->
+    <circle cx="24" cy="8" r="2" fill="#a0d0ff"/>
+    <circle cx="8" cy="24" r="2" fill="#a0d0ff"/>
+    <circle cx="40" cy="24" r="2" fill="#a0d0ff"/>
+    <circle cx="24" cy="40" r="2" fill="#a0d0ff"/>
+
+    <!-- Connection lines -->
+    <line x1="24" y1="24" x2="12" y2="12" stroke="#4a9eff" opacity="0.6"/>
+    <line x1="24" y1="24" x2="36" y2="12" stroke="#4a9eff" opacity="0.6"/>
+    <line x1="24" y1="24" x2="12" y2="36" stroke="#4a9eff" opacity="0.6"/>
+    <line x1="24" y1="24" x2="36" y2="36" stroke="#4a9eff" opacity="0.6"/>
+
+    <line x1="24" y1="24" x2="24" y2="8" stroke="#4a9eff" opacity="0.4"/>
+    <line x1="24" y1="24" x2="8" y2="24" stroke="#4a9eff" opacity="0.4"/>
+    <line x1="24" y1="24" x2="40" y2="24" stroke="#4a9eff" opacity="0.4"/>
+    <line x1="24" y1="24" x2="24" y2="40" stroke="#4a9eff" opacity="0.4"/>
+
+    <!-- Sparkle effect (AI magic) -->
+    <g stroke="#ffd700" stroke-width="1.5">
+      <line x1="38" y1="10" x2="42" y2="10"/>
+      <line x1="40" y1="8" x2="40" y2="12"/>
+
+      <line x1="10" y1="38" x2="14" y2="38"/>
+      <line x1="12" y1="36" x2="12" y2="40"/>
+    </g>
+  </g>
+</svg>

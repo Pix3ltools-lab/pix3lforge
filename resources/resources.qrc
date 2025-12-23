@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/icon.ico</file>
+        <file>icons/icon.png</file>
+        <file>icons/image_placeholder.svg</file>
+        <file>icons/toolbar/open.svg</file>
+        <file>icons/toolbar/save.svg</file>
+        <file>icons/toolbar/undo.svg</file>
+        <file>icons/toolbar/redo.svg</file>
+        <file>icons/toolbar/auto_enhance.svg</file>
+        <file>icons/toolbar/ai_enhance.svg</file>
+        <file>icons/toolbar/brightness.svg</file>
+        <file>icons/toolbar/contrast.svg</file>
+        <file>icons/toolbar/blackwhite.svg</file>
+        <file>icons/toolbar/sharpen.svg</file>
+        <file>icons/toolbar/blur.svg</file>
+        <file>icons/toolbar/rotate.svg</file>
+        <file>icons/toolbar/flip_horizontal.svg</file>
+        <file>icons/toolbar/resize.svg</file>
+        <file>icons/toolbar/zoom_in.svg</file>
+        <file>icons/toolbar/zoom_out.svg</file>
+        <file>icons/toolbar/zoom_normal.svg</file>
+        <file>icons/toolbar/fit_to_window.svg</file>
+    </qresource>
+</RCC>
