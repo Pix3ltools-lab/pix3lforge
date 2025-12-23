@@ -197,11 +197,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Part of the Pix3ltools-lab ecosystem
 - AI enhancement powered by multiple providers
 
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/paolosereno/pix3lforge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/paolosereno/pix3lforge/discussions)
-- **Documentation**: [Wiki](https://github.com/paolosereno/pix3lforge/wiki)
 
 ---
 
