@@ -1,6 +1,6 @@
-# PixelForge
+# Pix3lForge
 
-PixelForge is a professional cross-platform desktop image editor built with C++ and Qt 6.9. Designed with AI video generation workflows in mind, it provides powerful preprocessing tools for images that will be used in AI-powered video creation.
+Pix3lForge is a professional cross-platform desktop image editor built with C++ and Qt 6.9. Designed with AI video generation workflows in mind, it provides powerful preprocessing tools for images that will be used in AI-powered video creation.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Qt](https://img.shields.io/badge/Qt-6.9-green.svg)
